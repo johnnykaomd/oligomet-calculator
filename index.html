@@ -48,10 +48,6 @@ select,input{width:100%;padding:9px 10px;border:1px solid var(--line);border-rad
     <div class="kpi"><div class="v" id="medm">&ndash;</div><div class="l">median survival</div></div>
   </div>
   <div class="curvewrap"><svg id="curve" viewBox="0 0 600 240" width="100%" style="max-height:260px"></svg></div>
-  <div class="disc"><b>For research and education.</b> This calculator was developed in patients treated by
-   one radiation oncologist and has not been tested in other patient groups. It estimates prognosis. It does not
-   predict whether a treatment will help. Results are less reliable for patients who differ from those in the
-   study. It does not replace clinical judgment.</div>
 </div>
 <div class="foot" id="foot"></div>
 </div>
@@ -81,7 +77,7 @@ function update(){const x=readX(),L=LP(x);
   const md=medianMonths(L);document.getElementById("medm").textContent=md===null?">"+M.max_mo+" mo":md+" mo";
   draw(L);
 }
-document.getElementById("foot").innerHTML="<b>About the model.</b> Cox proportional hazards model using ECOG performance status, age, albumin, primary tumor type, liver metastases and oligoprogression. It was developed in "+M.n+" patients ("+M.events+" deaths) treated with comprehensive radiotherapy for oligometastases. Coefficients were shrunk by a factor of "+M.slope+" to correct for overfitting. Survival is measured from the radiation oncology consultation and is shown to 5 years because few patients were followed longer. Preliminary version, November 2026. Manuscript under review.";
+document.getElementById("foot").innerHTML="<b>Model.</b> Cox proportional-hazards on ECOG, age, albumin, favorable histology (breast/prostate/kidney), liver metastasis, and oligoprogressive disease. Coefficients shrunk by the bootstrap optimism-corrected calibration slope ("+M.slope+"). Developed and internally validated on "+M.n+" patients. Estimates are shown to 5 years. &mdash; Preliminary version (November 2026). Manuscript under review.";
 COVS.forEach(k=>document.getElementById(k).addEventListener("input",update));
 update();
 </script></body></html>
