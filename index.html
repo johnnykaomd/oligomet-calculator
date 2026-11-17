@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Survival Calculator for Oligometastatic Cancer</title>
+<title>Oligometastatic Disease - Overall Survival Calculator</title>
 <style>
 :root{--blue:#1f4e79;--red:#c1495d;--ink:#1a2230;--muted:#5b6573;--line:#e3e8ef;--bg:#f6f8fb}
 *{box-sizing:border-box}
@@ -26,8 +26,8 @@ select,input{width:100%;padding:9px 10px;border:1px solid var(--line);border-rad
 .foot b{color:var(--ink)}
 </style></head>
 <body><div class="wrap">
-<h1>Survival Calculator for Oligometastatic Cancer</h1>
-<p class="sub">Overall survival after comprehensive radiotherapy, based on <span id="meta"></span></p>
+<h1>Oligometastatic Disease &mdash; Overall Survival Calculator</h1>
+<p class="sub">6-variable Cox model following comprehensive involved site radiation</p>
 <div class="card">
   <div class="grid">
     <div><label>ECOG performance status</label>
@@ -81,7 +81,6 @@ function update(){const x=readX(),L=LP(x);
   const md=medianMonths(L);document.getElementById("medm").textContent=md===null?">"+M.max_mo+" mo":md+" mo";
   draw(L);
 }
-document.getElementById("meta").textContent=M.n+" patients ("+M.events+" deaths)";
 document.getElementById("foot").innerHTML="<b>About the model.</b> Cox proportional hazards model using ECOG performance status, age, albumin, primary tumor type, liver metastases and oligoprogression. It was developed in "+M.n+" patients ("+M.events+" deaths) treated with comprehensive radiotherapy for oligometastases. Coefficients were shrunk by a factor of "+M.slope+" to correct for overfitting. Survival is measured from the radiation oncology consultation and is shown to 5 years because few patients were followed longer. Preliminary version, November 2026. Manuscript under review.";
 COVS.forEach(k=>document.getElementById(k).addEventListener("input",update));
 update();
