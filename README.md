@@ -1,8 +1,9 @@
-# Oligometastatic Disease Overall Survival Calculator (preliminary)
+# Survival Calculator for Oligometastatic Cancer (preliminary)
 
-Single-page calculator for a 6-variable Cox proportional-hazards model of overall survival after comprehensive radiotherapy for oligometastases (ECOG performance status, age, albumin, favorable histology, liver metastasis, oligoprogression). Coefficients are shrunk by the bootstrap optimism-corrected calibration slope (0.862).
+This page estimates overall survival after comprehensive radiotherapy for oligometastases. It uses a Cox model with six variables: ECOG performance status, age, albumin, primary tumor type (breast, prostate or kidney versus other), liver metastases and oligoprogression.
 
-- Developed on 162 patients (92 deaths) at a single institution; internally validated only.
-- Research tool; not for sole clinical decision-making.
-- Runs entirely in the browser. Nothing entered is sent anywhere.
-- Manuscript under review; citation will be added on publication.
+The model was developed in 162 patients (92 deaths) treated by one radiation oncologist. It has not been tested in other patient groups. It is for research and education and does not replace clinical judgment.
+
+The calculator runs in the browser. Nothing you enter is sent anywhere.
+
+The manuscript is under review. A citation will be added when it is published.
