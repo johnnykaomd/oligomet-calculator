@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oligometastatic OS Prognosis Calculator</title>
+<style>
+:root{--blue:#1f4e79;--red:#c1495d;--ink:#1a2230;--muted:#5b6573;--line:#e3e8ef;--bg:#f6f8fb}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:1.45rem;margin:0 0 2px}
+.sub{color:var(--muted);font-size:.92rem;margin:0 0 18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 1px 3px rgba(20,30,50,.05)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.85rem;font-weight:600;margin:0 0 5px}
+label small{font-weight:400;color:var(--muted)}
+select,input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;background:#fff}
+.out{display:flex;gap:14px;margin-top:20px;flex-wrap:wrap}
+.kpi{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center}
+.kpi .v{font-size:1.7rem;font-weight:700;color:var(--blue);line-height:1.1}
+.kpi .l{font-size:.78rem;color:var(--muted);margin-top:3px}
+.curvewrap{margin-top:20px}
+.disc{margin-top:18px;background:#fff6f6;border:1px solid #f0d4d8;border-radius:10px;padding:13px 15px;font-size:.82rem;color:#7a3b44;line-height:1.45}
+.foot{color:var(--muted);font-size:.78rem;margin-top:22px;line-height:1.5}
+.foot b{color:var(--ink)}
+</style></head>
+<body><div class="wrap">
+<h1>Oligometastatic Disease &mdash; Overall Survival Calculator</h1>
+<p class="sub">Parsimonious 6-variable Cox model &middot; ablative radiation cohort &middot; <span id="meta"></span></p>
+<div class="card">
+  <div class="grid">
+    <div><label>ECOG performance status</label>
+      <select id="ecog"><option value="0">0 &ndash; fully active</option><option value="1" selected>1 &ndash; restricted, ambulatory</option><option value="2">2 &ndash; up &gt;50% of day</option><option value="3">3 &ndash; limited self-care</option><option value="4">4 &ndash; bedbound</option></select></div>
+    <div><label>Age <small>(years)</small></label><input id="age" type="number" value="68" min="18" max="100" step="1"></div>
+    <div><label>Serum albumin <small>(g/dL)</small></label><input id="albumin" type="number" value="3.8" min="1" max="5.5" step="0.1"></div>
+    <div><label>Favorable histology <small>(breast / prostate / kidney)</small></label>
+      <select id="bpk"><option value="0" selected>No</option><option value="1">Yes</option></select></div>
+    <div><label>Liver metastasis</label>
+      <select id="liver"><option value="0" selected>No</option><option value="1">Yes</option></select></div>
+    <div><label>Oligoprogressive disease</label>
+      <select id="oligoprog"><option value="0" selected>No</option><option value="1">Yes</option></select></div>
+  </div>
+  <div class="out">
+    <div class="kpi"><div class="v" id="os1">&ndash;</div><div class="l">1-year OS</div></div>
+    <div class="kpi"><div class="v" id="os2">&ndash;</div><div class="l">2-year OS</div></div>
+    <div class="kpi"><div class="v" id="os3">&ndash;</div><div class="l">3-year OS</div></div>
+    <div class="kpi"><div class="v" id="medm">&ndash;</div><div class="l">median OS</div></div>
+  </div>
+  <div class="curvewrap"><svg id="curve" viewBox="0 0 600 240" width="100%" style="max-height:260px"></svg></div>
+  <div class="disc"><b>Research tool &mdash; not for sole clinical decision-making.</b> Internally validated only
+   (single institution; external validation pending). Predicts <b>prognosis</b>, not benefit from any specific
+   treatment, and does not guarantee an individual outcome. Estimates are uncertain for inputs outside the
+   development cohort range. Use alongside, not in place of, clinical judgment.</div>
+</div>
+<div class="foot" id="foot"></div>
+</div>
+<script>
+const M = {"coef": {"ecog": 0.3101862882993805, "age": 0.02833556685237007, "albumin": -0.3684750705073438, "bpk": -0.7795971736691639, "liver": 0.34737921124719484, "oligoprog": 0.6480802549051615}, "mean": {"ecog": 1.117283950617284, "age": 69.82098765432099, "albumin": 3.733333337454148, "bpk": 0.2654320987654321, "liver": 0.09876543209876543, "oligoprog": 0.17901234567901234}, "months": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], "H0": [0.0, 0.0, 0.0, 0.014856402054101714, 0.025343133086865702, 0.05282055158646304, 0.0759107912466594, 0.08799594642068558, 0.1068818057554266, 0.14060167677186206, 0.16196801736087876, 0.16943796004277317, 0.18477279529580007, 0.23416867746183181, 0.24289906448127652, 0.27960730633483294, 0.2893812469816008, 0.3093708918107902, 0.32987242040954895, 0.37343873610998224, 0.39689196584044806, 0.42080266684717826, 0.43305376198146206, 0.43305376198146206, 0.4832838238186627, 0.5242846315609209, 0.5242846315609209, 0.5389126786148866, 0.5389126786148866, 0.5540502611400666, 0.5849265318461654, 0.5849265318461654, 0.60169380292656, 0.6361555290342122, 0.6733233165075551, 0.6733233165075551, 0.6733233165075551, 0.6927622642049667, 0.7126092401165478, 0.7126092401165478, 0.7334157282622402, 0.7334157282622402, 0.7334157282622402, 0.7551905946881597, 0.7996655397416444, 0.7996655397416444, 0.8518181221486695, 0.8518181221486695, 0.9069557184926663, 0.9069557184926663, 0.9069557184926663, 0.9069557184926663, 0.9069557184926663, 0.9069557184926663, 0.9383237366156856, 1.0061576147172433, 1.0061576147172433, 1.0061576147172433, 1.0061576147172433, 1.0061576147172433, 1.0061576147172433], "max_mo": 60, "n": 162, "events": 92, "slope": 0.862, "raw_coef": {"ecog": 0.3598448820178428, "age": 0.03287188729973326, "albumin": -0.4274652790108397, "bpk": -0.9044050738621392, "liver": 0.40299212441669935, "oligoprog": 0.7518332423493753}};
+const COVS=["ecog","age","albumin","bpk","liver","oligoprog"];
+function readX(){const x={};for(const k of COVS)x[k]=parseFloat(document.getElementById(k).value);return x;}
+function LP(x){let s=0;for(const k of COVS)s+=M.coef[k]*(x[k]-M.mean[k]);return s;}
+function survMonth(m,L){const i=Math.max(0,Math.min(M.max_mo,Math.round(m)));return Math.exp(-M.H0[i]*Math.exp(L));}
+function pct(v){return (100*v).toFixed(0)+"%";}
+function medianMonths(L){for(let m=0;m<=M.max_mo;m++){if(survMonth(m,L)<=0.5)return m;}return null;}
+function draw(L){
+  const W=600,H=240,pl=44,pr=12,pt=12,pb=30,iw=W-pl-pr,ih=H-pt-pb,MX=M.max_mo;
+  const xs=m=>pl+iw*m/MX, ys=s=>pt+ih*(1-s);
+  let pts="";for(let m=0;m<=MX;m++){pts+=(m?" ":"")+xs(m).toFixed(1)+","+ys(survMonth(m,L)).toFixed(1);}
+  let grid="";
+  [0,.25,.5,.75,1].forEach(s=>{const y=ys(s);grid+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="#eef2f7"/><text x="${pl-7}" y="${y+3}" text-anchor="end" font-size="10" fill="#8a93a3">${(s*100).toFixed(0)}</text>`;});
+  for(let m=0;m<=MX;m+=12){const x=xs(m);grid+=`<text x="${x}" y="${H-10}" text-anchor="middle" font-size="10" fill="#8a93a3">${m/12}</text>`;}
+  document.getElementById("curve").innerHTML=grid+
+    `<polyline points="${pts}" fill="none" stroke="#1f4e79" stroke-width="2.4"/>`+
+    `<text x="${pl+iw/2}" y="${H-0}" text-anchor="middle" font-size="10" fill="#5b6573">years from consultation</text>`;
+}
+function update(){const x=readX(),L=LP(x);
+  document.getElementById("os1").textContent=pct(survMonth(12,L));
+  document.getElementById("os2").textContent=pct(survMonth(24,L));
+  document.getElementById("os3").textContent=pct(survMonth(36,L));
+  const md=medianMonths(L);document.getElementById("medm").textContent=md===null?">"+M.max_mo+" mo":md+" mo";
+  draw(L);
+}
+document.getElementById("meta").textContent="N="+M.n+", "+M.events+" deaths";
+document.getElementById("foot").innerHTML="<b>Model.</b> Cox proportional-hazards on ECOG, age, albumin, favorable histology (breast/prostate/kidney), liver metastasis, and oligoprogressive disease. Coefficients shrunk by the bootstrap optimism-corrected calibration slope ("+M.slope+") and the baseline re-estimated accordingly. Developed on "+M.n+" patients ("+M.events+" deaths). Estimates are shown to 5 years; beyond that too few patients remain at risk for reliable prediction. Internal validation only. &mdash; <i>Preliminary version (November 2026). Manuscript under review.</i>";
+COVS.forEach(k=>document.getElementById(k).addEventListener("input",update));
+update();
+</script></body></html>
